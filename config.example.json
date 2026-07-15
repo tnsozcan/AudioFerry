@@ -1,0 +1,12 @@
+{
+  "address": "",
+  "auto_detect": true,
+  "device": null,
+  "volume": 60,
+  "gain": 1,
+  "buffer_ms": 50,
+  "latency_frames": 1,
+  "language": "en",
+  "install_done": false,
+  "setup_done": false
+}

@@ -1,0 +1,42 @@
+# Runtime configuration and logs
+bridge_config.json
+bridge_config.bad.json
+bridge.log
+bridge.err.log
+bridge.log.*
+bridge.err.log.*
+audioferry.lock
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Build and release output
+build/
+dist/
+build-release/
+dist-release/
+release/
+*.spec.bak
+
+# Editors and operating systems
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.tmp
+*.swp
+Thumbs.db
+Desktop.ini
