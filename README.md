@@ -1,5 +1,7 @@
 # AudioFerry
 
+[⬇️ Download Latest Release](https://github.com/tnsozcan/AudioFerry/releases/latest) · [📖 Documentation](https://github.com/tnsozcan/AudioFerry#readme)
+
 ## English
 
 AudioFerry is a lightweight Windows application that streams system audio to compatible AirPlay receivers, including Apple HomePod devices.
@@ -18,7 +20,7 @@ AudioFerry is a lightweight Windows application that streams system audio to com
 
 ### Screenshots
 
-No verified, privacy-safe screenshot is included yet.
+![AudioFerry English interface](docs/images/audioferry-en.png)
 
 ### Requirements
 
@@ -113,7 +115,7 @@ AudioFerry, Windows sistem sesini HomePod dahil uyumlu AirPlay alıcılarına ak
 
 ### Ekran Görüntüleri
 
-Henüz doğrulanmış ve kişisel veri içermeyen bir ekran görüntüsü eklenmemiştir.
+![AudioFerry Türkçe arayüz](docs/images/audioferry-tr.png)
 
 ### Gereksinimler
 
