@@ -40,3 +40,6 @@ release/
 *.swp
 Thumbs.db
 Desktop.ini
+
+# Local Codex project memory
+.codex-memory/
