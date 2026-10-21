@@ -1,12 +1,13 @@
 # AudioFerry
 
 [⬇️ Download Latest Release](https://github.com/tnsozcan/AudioFerry/releases/latest) · [📖 Documentation](https://github.com/tnsozcan/AudioFerry#readme)
+[▶ Watch AudioFerry streaming Windows audio to Apple HomePod](https://www.youtube.com/shorts/JWYZPHQrDZE)
 
 ## English
 
 AudioFerry is a lightweight Windows application that streams system audio to compatible AirPlay receivers, including Apple HomePod devices.
 
-> Status: beta v1.0.0-beta.1. The application builds and its offline paths are tested, but end-to-end audible playback still requires hardware acceptance testing.
+> Status: beta v1.0.0-beta.1. Windows-to-HomePod audio streaming has been successfully verified on real hardware. Brief audio dropouts may occur during extended playback sessions.
 
 ### Features
 
@@ -60,9 +61,9 @@ The packaged application stores `bridge_config.json`, `bridge.log`, and `bridge.
 
 ### Known Issues
 
-- End-to-end HomePod discovery and audio playback are not verified in the release environment.
+- Brief audio dropouts may occur during extended playback sessions. The root cause has not yet been identified.
 - Instant mode uses an experimental one-frame RAOP latency proven on the development hardware; receiver behavior can vary.
-- The RAOP path uses internal `pyatv` interfaces, so future `pyatv` upgrades can require code changes.
+- The RAOP path uses internal pyatv interfaces, so future `pyatv` upgrades can require code changes.
 - Password-protected receivers and all pairing/authentication combinations are not tested.
 - The executable is unsigned and may trigger SmartScreen.
 
@@ -101,7 +102,7 @@ Copyright © 2026 Taha Enes. AudioFerry source code is available under the [MIT 
 
 AudioFerry, Windows sistem sesini HomePod dahil uyumlu AirPlay alıcılarına aktarmanızı sağlayan hafif bir masaüstü uygulamasıdır.
 
-> Durum: beta v1.0.0-beta.1. Uygulama derlenmiş ve çevrimdışı yolları test edilmiştir; ancak duyulabilir uçtan uca oynatma için donanım kabul testi hâlâ gereklidir.
+> Durum: Beta v1.0.0-beta.1. Windows'tan HomePod'a ses aktarımı gerçek donanım üzerinde başarıyla test edilip doğrulanmıştır. Ancak uzun süreli ses oynatma sırasında kısa süreli ses kesilmeleri yaşanabilmektedir.
 
 ### Özellikler
 
@@ -146,7 +147,7 @@ Paketli uygulama ayarları ve logları `%APPDATA%\AudioFerry` altında tutar. Lo
 
 ### Bilinen Sorunlar
 
-- HomePod keşfi ve uçtan uca ses aktarımı sürüm ortamında doğrulanmamıştır.
+- Uzun süreli ses oynatma sırasında kısa süreli ses kesilmeleri yaşanabilmektedir. Sorunun kaynağı henüz belirlenmemiştir.
 - Anlık mod geliştirme donanımında çalışan deneysel bir karelik RAOP gecikmesini kullanır; sonuç alıcıya göre değişebilir.
 - RAOP akışı `pyatv` iç arayüzlerini kullanır; gelecek yükseltmeler kod değişikliği gerektirebilir.
 - Şifreli alıcılar ve tüm eşleştirme/kimlik doğrulama türleri test edilmemiştir.
