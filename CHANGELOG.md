@@ -2,6 +2,19 @@
 
 All notable changes follow Keep a Changelog and Semantic Versioning.
 
+## [1.0.0-beta.3] - 2026-11-17
+
+### Fixed
+
+- Restores the long-session reliability fixes that were left out of v1.0.0-beta.2, which shipped the v1.0.0-beta.1 audio code and therefore dropped out more often.
+- The capture buffer is now actually filled before AirPlay transmission starts.
+- Small clock differences between the Windows output device and AirPlay sender are corrected continuously, preventing the 50 ms buffer from draining during long sessions.
+- A partial packet is retained while the buffer refills instead of being discarded and replaced with extended silence.
+- WASAPI capture is reopened automatically after a device invalidation or mix-format change.
+- Recorder teardown errors after device invalidation no longer stop cleanup.
+- A selected Windows output no longer silently falls back to an unrelated virtual or physical device when it is unavailable.
+- Single-instance enforcement now uses correctly typed Windows mutex handles plus a locked file, preventing two packaged copies from competing for the audio device.
+
 ## [1.0.0-beta.2] - 2026-11-17
 
 ### Changed

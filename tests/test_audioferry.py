@@ -3,6 +3,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -78,6 +79,16 @@ class PresetTests(unittest.TestCase):
 
 
 class AudioFormatTests(unittest.TestCase):
+    def test_selected_loopback_does_not_fall_back_to_another_output(self):
+        selected = type("Microphone", (), {"name": "Steam Streaming Speakers"})()
+        other = type("Microphone", (), {"name": "Oculus Virtual Audio Device"})()
+        with (
+            patch.object(app, "normalize_output_device", return_value=selected.name),
+            patch.object(app.sc, "all_microphones", return_value=[selected, other]),
+        ):
+            candidates = app.loopback_candidates(selected.name)
+        self.assertEqual(candidates, [selected])
+
     def test_raw_raop_latency_keeps_one_frame_mode_and_is_bounded(self):
         self.assertEqual(app.normalize_raop_latency_frames(1), 1)
         self.assertEqual(app.normalize_raop_latency_frames(11025), 11025)
@@ -113,6 +124,43 @@ class AudioFormatTests(unittest.TestCase):
         self.assertFalse(runner.running)
         self.assertEqual(runner.status, "Stopped")
         self.assertIn("unsupported mix format", runner.last_error)
+
+    def test_partial_packet_is_kept_until_buffer_refills(self):
+        source = app.LoopbackAudioSource.__new__(app.LoopbackAudioSource)
+        source._closed = False
+        source._frame_size = 4
+        source._buffer_target_bytes = 16
+        source._audio_buffer = bytearray(range(8))
+        source._buffer_lock = threading.Lock()
+        source._buffering = False
+        source._last_underrun_log = 0.0
+
+        with patch.object(app, "log"):
+            silence = asyncio.run(source.readframes(4))
+        self.assertEqual(silence, b"\x00" * 16)
+        self.assertEqual(source._audio_buffer, bytearray(range(8)))
+        self.assertTrue(source._buffering)
+
+        source._audio_buffer.extend(range(8, 20))
+        resumed = asyncio.run(source.readframes(4))
+        self.assertEqual(resumed, bytes(range(16)))
+        self.assertEqual(source._audio_buffer, bytearray(range(16, 20)))
+        self.assertFalse(source._buffering)
+
+    def test_clock_drift_compensation_keeps_packet_size(self):
+        source = app.LoopbackAudioSource.__new__(app.LoopbackAudioSource)
+        source._closed = False
+        source._frame_size = 2
+        source._buffer_target_bytes = 32
+        source._audio_buffer = bytearray(range(30))
+        source._buffer_lock = threading.Lock()
+        source._buffering = False
+        source._last_underrun_log = 0.0
+
+        packet = asyncio.run(source.readframes(4))
+        self.assertEqual(len(packet), 8)
+        self.assertEqual(packet[-2:], packet[-4:-2])
+        self.assertEqual(len(source._audio_buffer), 24)
 
 
 class StartupTests(unittest.TestCase):

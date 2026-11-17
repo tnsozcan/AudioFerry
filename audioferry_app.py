@@ -6,6 +6,7 @@ import ctypes
 import ipaddress
 import json
 import locale
+import msvcrt
 import os
 import signal
 import sys
@@ -14,6 +15,7 @@ import time
 import tkinter as tk
 import traceback
 import winreg
+from ctypes import wintypes
 from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Optional
@@ -30,7 +32,7 @@ from pyatv.protocols.raop.audio_source import AudioSource
 from pyatv.support.metadata import MediaMetadata
 
 APP_NAME = "AudioFerry"
-APP_VERSION = "1.0.0-beta.2"
+APP_VERSION = "1.0.0-beta.3"
 CURRENT_LANGUAGE = "tr" if (locale.getlocale()[0] or "").lower().startswith("tr") else "en"
 DEFAULT_CONFIG = {
     "address": "",
@@ -376,12 +378,13 @@ def normalize_output_device(device_name: Optional[str]) -> Optional[str]:
 
 def loopback_candidates(device_name: Optional[str]):
     microphones = sc.all_microphones(include_loopback=True)
-    names = []
     normalized_device = normalize_output_device(device_name)
     if normalized_device:
-        names.append(normalized_device)
-    names.append(sc.default_speaker().name)
-    names.extend(output_device_names())
+        names = [normalized_device]
+    elif device_name:
+        return []
+    else:
+        names = [sc.default_speaker().name]
 
     seen = set()
     candidates = []
@@ -474,12 +477,15 @@ class LoopbackAudioSource(AudioSource):
         self._gain = gain
         self._gain_lock = threading.Lock()
         self._frame_size = channels * sample_size
+        self._device_name = device_name
         self._buffer_target_bytes = max(
             int(sample_rate * (buffer_ms / 1000.0) * self._frame_size),
             self._frame_size * 1024,
         )
         self._audio_buffer = bytearray()
         self._buffer_lock = threading.Lock()
+        self._buffer_ready = threading.Event()
+        self._buffering = True
         self._closed = False
         self._last_underrun_log = 0.0
         self._last_capture_log = 0.0
@@ -498,7 +504,8 @@ class LoopbackAudioSource(AudioSource):
         errors = []
         candidates = loopback_candidates(device_name)
         if not candidates:
-            candidates = [pick_loopback(device_name)]
+            selected = device_name or "Windows varsayılan çıkışı"
+            raise AudioCaptureError(f"Seçili ses çıkışı bulunamadı: {selected}")
 
         for microphone in candidates:
             for capture_rate, capture_channels in capture_format_candidates(
@@ -530,32 +537,73 @@ class LoopbackAudioSource(AudioSource):
 
         raise AudioCaptureError("Ses çıkışı açılamadı:\n" + "\n".join(errors[-12:]))
 
-    def _capture_worker(self) -> None:
-        if self._recorder is None:
+    def _close_recorder(self) -> None:
+        recorder = self._recorder
+        self._recorder = None
+        if recorder is None:
             return
+        try:
+            recorder.__exit__(None, None, None)
+        except Exception as ex:
+            # WASAPI commonly rejects teardown after a device is unplugged,
+            # disabled or has its mix format changed. The recorder is already dead.
+            log(f"Ses yakalama kaynağı kapatılırken hata yok sayıldı: {ex}", error=True)
+
+    def _reset_buffer(self) -> None:
+        with self._buffer_lock:
+            self._audio_buffer.clear()
+            self._buffering = True
+            self._buffer_ready.clear()
+
+    def _recover_recorder(self) -> bool:
+        self._close_recorder()
+        self._reset_buffer()
         while not self._closed:
             try:
-                data = self._recorder.record(numframes=1024)
+                self._open_recorder(self._device_name)
+                log("Ses yakalama kaynağı yeniden açıldı")
+                return True
+            except AudioCaptureError as ex:
+                now = time.monotonic()
+                if now - self._last_capture_log > 5:
+                    self._last_capture_log = now
+                    log(f"Ses yakalama kaynağı yeniden açılamadı: {ex}", error=True)
+                time.sleep(1.0)
+        return False
+
+    def _capture_worker(self) -> None:
+        while not self._closed:
+            if self._recorder is None and not self._recover_recorder():
+                return
+            recorder = self._recorder
+            if recorder is None:
+                continue
+            try:
+                data = recorder.record(numframes=1024)
                 pcm = self._float_to_airplay_pcm(data)
             except Exception as ex:
                 now = time.monotonic()
                 if now - self._last_capture_log > 5:
                     self._last_capture_log = now
-                    log(f"Ses yakalama durakladi, sessizlik dolduruluyor: {ex}", error=True)
-                silence_frames = round(1024 * self._sample_rate / self._capture_sample_rate)
-                pcm = self._silence_frames(silence_frames)
-                time.sleep(0.02)
+                    log(f"Ses yakalama durakladı, kaynak yeniden açılıyor: {ex}", error=True)
+                self._recover_recorder()
+                continue
             with self._buffer_lock:
                 self._audio_buffer.extend(pcm)
                 max_bytes = max(self._buffer_target_bytes * 2, self._frame_size * 4096)
                 if len(self._audio_buffer) > max_bytes:
                     del self._audio_buffer[: len(self._audio_buffer) - max_bytes]
+                if len(self._audio_buffer) >= self._buffer_target_bytes:
+                    self._buffer_ready.set()
+
+    async def wait_until_ready(self, timeout: float = 3.0) -> bool:
+        """Wait for the configured capture buffer before starting RAOP output."""
+        return await self._loop.run_in_executor(None, self._buffer_ready.wait, timeout)
 
     async def close(self) -> None:
         self._closed = True
         await self._loop.run_in_executor(None, self._capture_thread.join, 1.0)
-        if self._recorder is not None:
-            self._recorder.__exit__(None, None, None)
+        self._close_recorder()
 
     def _float_to_airplay_pcm(self, data: np.ndarray) -> bytes:
         if data.ndim == 1:
@@ -585,7 +633,7 @@ class LoopbackAudioSource(AudioSource):
         now = time.monotonic()
         if now - self._last_underrun_log > 5:
             self._last_underrun_log = now
-            log("Buffer bosaldi, akisi korumak icin sessizlik dolduruldu")
+            log("Yakalama tamponu boşaldı; yeniden doldurulurken sessizlik gönderiliyor")
 
     async def readframes(self, nframes: int) -> bytes:
         if self._closed:
@@ -594,17 +642,45 @@ class LoopbackAudioSource(AudioSource):
         bytes_needed = nframes * self._frame_size
         with self._buffer_lock:
             available_len = len(self._audio_buffer)
-            if available_len >= bytes_needed:
-                data = bytes(self._audio_buffer[:bytes_needed])
-                del self._audio_buffer[:bytes_needed]
+            if self._buffering:
+                if available_len < self._buffer_target_bytes:
+                    self._log_underrun()
+                    return self._silence_frames(nframes)
+                self._buffering = False
+
+            # The Windows capture clock and the RAOP sender clock are independent.
+            # Correct their long-term drift continuously. The farther the queue
+            # moves below its target, the more frames we duplicate (up to four);
+            # a persistently growing queue is corrected in the opposite direction.
+            frames_to_consume = nframes
+            correction_cap = min(4, max(1, nframes // 8))
+            if available_len < self._buffer_target_bytes:
+                deficit_frames = (self._buffer_target_bytes - available_len) // self._frame_size
+                correction_step = max(1, nframes // 2)
+                correction = min(correction_cap, 1 + deficit_frames // correction_step)
+                frames_to_consume = max(1, nframes - correction)
+            elif available_len > self._buffer_target_bytes * 3 // 2:
+                surplus_frames = (
+                    available_len - self._buffer_target_bytes * 3 // 2
+                ) // self._frame_size
+                correction_step = max(1, nframes // 2)
+                correction = min(correction_cap, 1 + surplus_frames // correction_step)
+                frames_to_consume = nframes + correction
+
+            bytes_to_consume = frames_to_consume * self._frame_size
+            if available_len >= bytes_to_consume:
+                data = bytes(self._audio_buffer[:bytes_to_consume])
+                del self._audio_buffer[:bytes_to_consume]
+                if frames_to_consume < nframes:
+                    last_frame = data[-self._frame_size :] if data else b"\x00" * self._frame_size
+                    data += last_frame * (nframes - frames_to_consume)
+                elif frames_to_consume > nframes:
+                    data = data[:bytes_needed]
                 return data
 
-            if available_len > 0:
-                available = bytes(self._audio_buffer[:available_len])
-                self._audio_buffer.clear()
-                missing = bytes_needed - len(available)
-                self._log_underrun()
-                return available + (b"\x00" * max(0, missing))
+            # Do not consume a partial packet. Keeping it lets the queue rebuild
+            # after scheduler jitter or small capture/playback clock drift.
+            self._buffering = True
 
         self._log_underrun()
         return self._silence_frames(nframes)
@@ -655,6 +731,8 @@ async def stream_once(config: dict, stop_event: threading.Event, runner=None) ->
             gain=config["gain"],
             buffer_ms=config["buffer_ms"],
         )
+        if not await source.wait_until_ready():
+            raise AudioCaptureError("Ses yakalama tamponu zamanında doldurulamadı")
         if runner is not None:
             runner.attach_live_controls(asyncio.get_running_loop(), stream.audio, source)
             runner.mark_running(device_config.name)
@@ -1272,13 +1350,31 @@ class TrayApp:
 
 def acquire_lock():
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateMutexW.argtypes = (wintypes.LPVOID, wintypes.BOOL, wintypes.LPCWSTR)
+    kernel32.CreateMutexW.restype = wintypes.HANDLE
+    kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+    kernel32.CloseHandle.restype = wintypes.BOOL
     mutex = kernel32.CreateMutexW(None, True, "Local\\AudioFerrySingleInstance")
     if not mutex:
         raise ctypes.WinError(ctypes.get_last_error())
     if ctypes.get_last_error() == 183:  # ERROR_ALREADY_EXISTS
+        kernel32.CloseHandle(mutex)
         sys.exit(0)
     BASE_DIR.mkdir(parents=True, exist_ok=True)
-    lock_file = LOCK_PATH.open("w", encoding="utf-8")
+    lock_file = LOCK_PATH.open("a+", encoding="utf-8")
+    lock_file.seek(0)
+    if lock_file.read(1) == "":
+        lock_file.write("0")
+        lock_file.flush()
+    lock_file.seek(0)
+    try:
+        msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+    except OSError:
+        lock_file.close()
+        kernel32.CloseHandle(mutex)
+        sys.exit(0)
+    lock_file.seek(0)
+    lock_file.truncate()
     lock_file.write(str(os.getpid()))
     lock_file.flush()
     return mutex, lock_file
@@ -1304,6 +1400,8 @@ def main() -> None:
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
         TrayApp().run(open_settings=not args.minimized)
     finally:
+        lock_file.seek(0)
+        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
         lock_file.close()
         ctypes.WinDLL("kernel32", use_last_error=True).CloseHandle(mutex)
 

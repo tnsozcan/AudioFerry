@@ -7,7 +7,7 @@
 
 AudioFerry is a lightweight Windows application that streams system audio to compatible AirPlay receivers, including Apple HomePod devices.
 
-> Status: beta v1.0.0-beta.2. Windows-to-HomePod audio streaming has been successfully verified on real hardware. Brief audio dropouts may occur during extended playback sessions.
+> Status: beta v1.0.0-beta.3. Windows-to-HomePod audio streaming has been successfully verified on real hardware. Brief audio dropouts may occur during extended playback sessions.
 
 ### Features
 
@@ -31,7 +31,7 @@ AudioFerry is a lightweight Windows application that streams system audio to com
 
 ### Installation
 
-Download/extract `AudioFerry-v1.0.0-beta.2-win-x64.zip`, then run `AudioFerry.exe`. The binary is not code-signed, so Microsoft Defender SmartScreen may display an unknown-publisher warning. Only continue if the SHA-256 checksum matches `SHA256SUMS.txt` from the same release.
+Download/extract `AudioFerry-v1.0.0-beta.3-win-x64.zip`, then run `AudioFerry.exe`. The binary is not code-signed, so Microsoft Defender SmartScreen may display an unknown-publisher warning. Only continue if the SHA-256 checksum matches `SHA256SUMS.txt` from the same release.
 
 ### Usage
 
@@ -102,7 +102,7 @@ Copyright © 2026 Taha Enes. AudioFerry source code and releases are free for pe
 
 AudioFerry, Windows sistem sesini HomePod dahil uyumlu AirPlay alıcılarına aktarmanızı sağlayan hafif bir masaüstü uygulamasıdır.
 
-> Durum: Beta v1.0.0-beta.2. Windows'tan HomePod'a ses aktarımı gerçek donanım üzerinde başarıyla test edilip doğrulanmıştır. Ancak uzun süreli ses oynatma sırasında kısa süreli ses kesilmeleri yaşanabilmektedir.
+> Durum: Beta v1.0.0-beta.3. Windows'tan HomePod'a ses aktarımı gerçek donanım üzerinde başarıyla test edilip doğrulanmıştır. Ancak uzun süreli ses oynatma sırasında kısa süreli ses kesilmeleri yaşanabilmektedir.
 
 ### Özellikler
 
@@ -126,7 +126,7 @@ AudioFerry, Windows sistem sesini HomePod dahil uyumlu AirPlay alıcılarına ak
 
 ### Kurulum
 
-`AudioFerry-v1.0.0-beta.2-win-x64.zip` paketini açın ve `AudioFerry.exe` dosyasını çalıştırın. Uygulama kod imzalı değildir; Microsoft Defender SmartScreen bilinmeyen yayıncı uyarısı gösterebilir. Yalnızca SHA-256 özeti aynı sürümdeki `SHA256SUMS.txt` ile eşleşiyorsa devam edin.
+`AudioFerry-v1.0.0-beta.3-win-x64.zip` paketini açın ve `AudioFerry.exe` dosyasını çalıştırın. Uygulama kod imzalı değildir; Microsoft Defender SmartScreen bilinmeyen yayıncı uyarısı gösterebilir. Yalnızca SHA-256 özeti aynı sürümdeki `SHA256SUMS.txt` ile eşleşiyorsa devam edin.
 
 ### Kullanım
 

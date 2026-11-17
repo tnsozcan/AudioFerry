@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-The v1.0.0-beta.2 Windows binary was built with the direct components below. Each component remains under its own license; it is not relicensed under AudioFerry's PolyForm Noncommercial license. The complete direct and transitive dependency list is in `THIRD_PARTY_INVENTORY.md`.
+The v1.0.0-beta.3 Windows binary was built with the direct components below. Each component remains under its own license; it is not relicensed under AudioFerry's PolyForm Noncommercial license. The complete direct and transitive dependency list is in `THIRD_PARTY_INVENTORY.md`.
 
 | Component | Version | Purpose | License | Source |
 |---|---:|---|---|---|
