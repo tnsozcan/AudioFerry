@@ -2,7 +2,7 @@
 
 All notable changes follow Keep a Changelog and Semantic Versioning.
 
-## [Unreleased]
+## [1.0.0-beta.2] - 2026-11-17
 
 ### Changed
 

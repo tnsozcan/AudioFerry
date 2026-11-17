@@ -108,7 +108,7 @@ def main() -> None:
         [
             "# Third-Party Dependency Inventory",
             "",
-            "Generated from the clean v1.0.0-beta.1 build environment. License metadata is informational; the exact distribution license files are under `third_party_licenses/`.",
+            "Generated from the clean v1.0.0-beta.2 build environment. License metadata is informational; the exact distribution license files are under `third_party_licenses/`.",
             "",
             "| Package | Version | Scope | Declared license | License files |",
             "|---|---:|---|---|---:|",

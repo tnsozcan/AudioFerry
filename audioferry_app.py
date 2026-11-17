@@ -30,7 +30,7 @@ from pyatv.protocols.raop.audio_source import AudioSource
 from pyatv.support.metadata import MediaMetadata
 
 APP_NAME = "AudioFerry"
-APP_VERSION = "1.0.0-beta.1"
+APP_VERSION = "1.0.0-beta.2"
 CURRENT_LANGUAGE = "tr" if (locale.getlocale()[0] or "").lower().startswith("tr") else "en"
 DEFAULT_CONFIG = {
     "address": "",

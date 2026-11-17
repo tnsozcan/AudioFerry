@@ -3,8 +3,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 $ReleaseDir = Join-Path $Root 'release'
 $BuildDir = Join-Path $Root 'build-release'
 $DistDir = Join-Path $Root 'dist-release'
-$StageDir = Join-Path $ReleaseDir 'AudioFerry-v1.0.0-beta.1-win-x64'
-$ZipPath = Join-Path $ReleaseDir 'AudioFerry-v1.0.0-beta.1-win-x64.zip'
+$StageDir = Join-Path $ReleaseDir 'AudioFerry-v1.0.0-beta.2-win-x64'
+$ZipPath = Join-Path $ReleaseDir 'AudioFerry-v1.0.0-beta.2-win-x64.zip'
 Set-Location $Root
 
 python scripts\generate-third-party-inventory.py
@@ -27,11 +27,11 @@ Copy-Item -LiteralPath (Join-Path $Root 'LICENSE') -Destination $StageDir
 Copy-Item -LiteralPath (Join-Path $Root 'THIRD_PARTY_NOTICES.md') -Destination $StageDir
 Copy-Item -LiteralPath (Join-Path $Root 'THIRD_PARTY_INVENTORY.md') -Destination $StageDir
 Copy-Item -LiteralPath (Join-Path $Root 'TRADEMARKS.md') -Destination $StageDir
-Copy-Item -LiteralPath (Join-Path $Root 'RELEASE_NOTES_v1.0.0-beta.1.md') -Destination $StageDir
+Copy-Item -LiteralPath (Join-Path $Root 'RELEASE_NOTES_v1.0.0-beta.2.md') -Destination $StageDir
 Copy-Item -LiteralPath (Join-Path $Root 'third_party_licenses') -Destination $StageDir -Recurse
 
 if (Test-Path -LiteralPath $ZipPath) { Remove-Item -LiteralPath $ZipPath -Force }
 Compress-Archive -LiteralPath $StageDir -DestinationPath $ZipPath -CompressionLevel Optimal
 $Hash = (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash.ToLowerInvariant()
-"$Hash  AudioFerry-v1.0.0-beta.1-win-x64.zip" | Set-Content -LiteralPath (Join-Path $ReleaseDir 'SHA256SUMS.txt') -Encoding ascii
+"$Hash  AudioFerry-v1.0.0-beta.2-win-x64.zip" | Set-Content -LiteralPath (Join-Path $ReleaseDir 'SHA256SUMS.txt') -Encoding ascii
 Write-Output "Release: $ZipPath"
