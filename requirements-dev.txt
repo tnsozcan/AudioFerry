@@ -1,0 +1,4 @@
+-r requirements.txt
+mypy==1.17.1
+PyInstaller==6.20.0
+ruff==0.12.2

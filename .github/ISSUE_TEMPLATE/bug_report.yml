@@ -1,0 +1,112 @@
+name: Bug report
+description: Report a reproducible AudioFerry problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve AudioFerry. Remove private IP addresses, Windows usernames, receiver names, credentials, and unrelated raw logs before submitting.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am using the latest published AudioFerry release.
+          required: true
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed private or identifying information from this report.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected instead.
+      placeholder: AudioFerry connects, but audio stops after...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Select...
+        2. Click...
+        3. Play...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: AudioFerry version
+      placeholder: v1.0.0-beta.2
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+
+  - type: input
+    id: receiver
+    attributes:
+      label: Receiver type and software version
+      description: Use a generic model description; do not include your custom room or device name.
+      placeholder: HomePod mini, software 26.x
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: AudioFerry mode
+      options:
+        - Instant
+        - Responsive
+        - Balanced
+        - Stable
+        - Custom settings
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: output
+    attributes:
+      label: Windows output type
+      description: Describe the device generically if its name contains personal information.
+      placeholder: USB headset, HDMI output, or virtual speaker
+
+  - type: dropdown
+    id: security_permission
+    attributes:
+      label: Security software audio-capture permission
+      description: Antivirus tools may classify WASAPI loopback capture as microphone access.
+      options:
+        - Allowed
+        - Blocked
+        - No prompt appeared
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant redacted logs
+      description: Include only the lines around the failure. Remove IP addresses, usernames, receiver names, and device names.
+      render: text
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots or other details that may help reproduce the problem.
